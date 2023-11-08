@@ -24,7 +24,7 @@ def argparser():
     )
 
     parser.add_argument(
-        '--huggingSave',
+        '--hugging_save',
         type=str,
         help='Name of model to be saved'
     )

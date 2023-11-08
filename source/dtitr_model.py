@@ -336,7 +336,7 @@ def run_train_model(FLAGS):
 
     mse, rmse, ci = dtitr_model.evaluate([prot_test, smiles_test], kd_test)
 
-    if FLAGS.huggingsave:
+    if FLAGS.hugging_save:
         dtitr_model.save('dtitr_model.h5')
         api = HfApi()
         api.upload_file(
