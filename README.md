@@ -1,3 +1,37 @@
+## Usage 
+
+### Log Into HuggingFace
+```
+huggingface-cli login --token $USERTOKEN
+```
+The specific repo that contains all the models can be found [here](https://huggingface.co/DLSAutumn2023/DTITR_Recreation).
+
+(The architecture supports the use of the Linear Multi-Head Attention arXiv:2006.04768)
+### Training (Amended)
+In order to save the model to the repo add the flag "--huggingsave true" to the command
+
+```
+python dtitr_model.py --huggingsave True --option Train --num_epochs 500 --batch_dim 32 --prot_transformer_depth 3 --smiles_transformer_depth 3 --cross_block_depth 1 --prot_transformer_heads 4 --smiles_transformer_heads 4 --cross_block_heads 4 --prot_parameter_sharing '' --prot_dim_k 0 --prot_ff_dim 512 --smiles_ff_dim 512 --d_model 128 --dropout_rate 0.1 --dense_atv_fun gelu --out_mlp_depth 3 --out_mlp_hdim 512 512 512 --optimizer_fn radam 1e-04 0.9 0.999 1e-08 1e-05 
+```
+Otherwise just run:
+```
+python dtitr_model.py --option Train --num_epochs 500 --batch_dim 32 --prot_transformer_depth 3 --smiles_transformer_depth 3 --cross_block_depth 1 --prot_transformer_heads 4 --smiles_transformer_heads 4 --cross_block_heads 4 --prot_parameter_sharing '' --prot_dim_k 0 --prot_ff_dim 512 --smiles_ff_dim 512 --d_model 128 --dropout_rate 0.1 --dense_atv_fun gelu --out_mlp_depth 3 --out_mlp_hdim 512 512 512 --optimizer_fn radam 1e-04 0.9 0.999 1e-08 1e-05
+```
+### Validation
+```
+python dtitr_model.py --option Validation --num_epochs 500 --batch_dim 32 --prot_transformer_depth 2 3 4 --smiles_transformer_depth 2 3 4 --cross_block_depth 1 2 3 4 --prot_transformer_heads 4 --smiles_transformer_heads 4 --cross_block_heads 4 --prot_parameter_sharing '' --prot_dim_k 0 --prot_ff_dim 512 --smiles_ff_dim 512 --d_model 128 --dropout_rate 0.1 --dense_atv_fun gelu --out_mlp_depth 3 --out_mlp_hdim 512 512 512 --optimizer_fn radam 1e-04 0.9 0.999 1e-08 1e-05
+```
+
+### Evaluation (Amended)
+When evaluating a specific model, provide the path to the pb file with "--mpath $MODELPATH"
+```
+python dtitr_model.py --option Evaluation --mpath $MODELPATH
+```
+otherwise just run the following to evaluate a model at "../model/dtitr_model/"
+```
+python dtitr_model.py --option Evaluation
+```
+
 # DTITR: End-to-End Drut-Target Binding Affinity Prediction with Transformer
 <p align="justify"> We propose an end-to-end Transformer-based architecture (DTITR) for predicting the logarithmic-transformed quantitative dissociation constant (pKd) of DTI pairs, where self-attention layers are exploited to learn the short and long-term biological and chemical context dependencies between the sequential and structural units of the protein sequences and compound SMILES strings, respectively, and cross-attention layers to exchange information and learn the pharmacological context associated with the interaction space. The architecture makes use of two parallel Transformer-Encoders to compute a contextual embedding of the protein sequences and SMILES strings, and a Cross-Attention Transformer-Encoder block to model the interaction, where the resulting aggregated representation hidden states are concatenated and used as input for a Fully-Connected Feed-Forward Network.</p>
 
@@ -36,19 +70,3 @@
 - Json
 - periodictable
 - subword_nmt
-
-## Usage 
-(The architecture supports the use of the Linear Multi-Head Attention arXiv:2006.04768)
-### Training
-```
-python dtitr_model.py --option Train --num_epochs 500 --batch_dim 32 --prot_transformer_depth 3 --smiles_transformer_depth 3 --cross_block_depth 1 --prot_transformer_heads 4 --smiles_transformer_heads 4 --cross_block_heads 4 --prot_parameter_sharing '' --prot_dim_k 0 --prot_ff_dim 512 --smiles_ff_dim 512 --d_model 128 --dropout_rate 0.1 --dense_atv_fun gelu --out_mlp_depth 3 --out_mlp_hdim 512 512 512 --optimizer_fn radam 1e-04 0.9 0.999 1e-08 1e-05
-```
-### Validation
-```
-python dtitr_model.py --option Validation --num_epochs 500 --batch_dim 32 --prot_transformer_depth 2 3 4 --smiles_transformer_depth 2 3 4 --cross_block_depth 1 2 3 4 --prot_transformer_heads 4 --smiles_transformer_heads 4 --cross_block_heads 4 --prot_parameter_sharing '' --prot_dim_k 0 --prot_ff_dim 512 --smiles_ff_dim 512 --d_model 128 --dropout_rate 0.1 --dense_atv_fun gelu --out_mlp_depth 3 --out_mlp_hdim 512 512 512 --optimizer_fn radam 1e-04 0.9 0.999 1e-08 1e-05
-```
-
-### Evaluation
-```
-python dtitr_model.py --option Evaluation
-```
