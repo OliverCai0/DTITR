@@ -8,10 +8,10 @@ The specific repo that contains all the models can be found [here](https://huggi
 
 (The architecture supports the use of the Linear Multi-Head Attention arXiv:2006.04768)
 ### Training (Amended)
-In order to save the model to the repo add the flag "--huggingsave true" to the command
+In order to save the model to the repo add the flag "--huggingsave $MODELNAME" to the command
 
 ```
-python dtitr_model.py --huggingsave True --option Train --num_epochs 500 --batch_dim 32 --prot_transformer_depth 3 --smiles_transformer_depth 3 --cross_block_depth 1 --prot_transformer_heads 4 --smiles_transformer_heads 4 --cross_block_heads 4 --prot_parameter_sharing '' --prot_dim_k 0 --prot_ff_dim 512 --smiles_ff_dim 512 --d_model 128 --dropout_rate 0.1 --dense_atv_fun gelu --out_mlp_depth 3 --out_mlp_hdim 512 512 512 --optimizer_fn radam 1e-04 0.9 0.999 1e-08 1e-05 
+python dtitr_model.py --huggingsave $MODELNAME --option Train --num_epochs 500 --batch_dim 32 --prot_transformer_depth 3 --smiles_transformer_depth 3 --cross_block_depth 1 --prot_transformer_heads 4 --smiles_transformer_heads 4 --cross_block_heads 4 --prot_parameter_sharing '' --prot_dim_k 0 --prot_ff_dim 512 --smiles_ff_dim 512 --d_model 128 --dropout_rate 0.1 --dense_atv_fun gelu --out_mlp_depth 3 --out_mlp_hdim 512 512 512 --optimizer_fn radam 1e-04 0.9 0.999 1e-08 1e-05 
 ```
 Otherwise just run:
 ```
