@@ -26,7 +26,7 @@ def argparser():
     parser.add_argument(
         '--huggingSave',
         type=str,
-        help='Saves model to hugging face repo'
+        help='Name of model to be saved'
     )
 
     parser.add_argument(
