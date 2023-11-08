@@ -341,7 +341,7 @@ def run_train_model(FLAGS):
         api = HfApi()
         api.upload_file(
             path_or_fileobj= os.path.join(os.getcwd(), 'dtitr_model.h5'),  
-            path_in_repo=f'DTITR-{FLAGS.huggingsave}',
+            path_in_repo=f'DTITR-{FLAGS.hugging_save}',
             repo_id="DLSAutumn2023/DTITR_Recreation"
         )
 
