@@ -392,9 +392,18 @@ def run_evaluation_model(FLAGS):
     optimizer_fun = tfa.optimizers.RectifiedAdam(learning_rate=1e-04, beta_1=0.9,
                                                  beta_2=0.999, epsilon=1e-08,
                                                  weight_decay=1e-05)
+    
+    dtitr_model = build_dtitr_model(FLAGS, FLAGS.prot_transformer_depth[0], FLAGS.smiles_transformer_depth[0],
+                                    FLAGS.cross_block_depth[0],
+                                    FLAGS.prot_transformer_heads[0], FLAGS.smiles_transformer_heads[0],
+                                    FLAGS.cross_block_heads[0],
+                                    FLAGS.prot_parameter_sharing[0], FLAGS.prot_dim_k[0],
+                                    FLAGS.prot_ff_dim[0], FLAGS.smiles_ff_dim[0], FLAGS.d_model[0],
+                                    FLAGS.dropout_rate[0], FLAGS.dense_atv_fun[0],
+                                    FLAGS.out_mlp_depth[0], FLAGS.out_mlp_hdim[0], optimizer_fun)
 
-    dtitr_model = build_dtitr_model(FLAGS, 3, 3, 1, 4, 4, 4, '', '', 512, 512, 128, 0.1, 'gelu', 3, [512, 512, 512],
-                                    optimizer_fun)
+    # dtitr_model = build_dtitr_model(FLAGS, 3, 3, 1, 4, 4, 4, '', '', 512, 512, 128, 0.1, 'gelu', 3, [512, 512, 512],
+    #                                 optimizer_fun)
 
     # small modification to load a specific model from a path
     dtitr_model.load_weights('../model/dtitr_model/') if not FLAGS.mpath else dtitr_model.load_weights(os.path.join(os.getcwd(), FLAGS.mpath))
