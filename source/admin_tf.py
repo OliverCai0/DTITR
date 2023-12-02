@@ -8,8 +8,7 @@ class Admin(tf.keras.layers.Layer):
         self.omega_value = ((num_res_layers + 1) / math.log(num_res_layers + 1) - 1) ** .5
     
     def build(self, input_shape):
-        self.omega = self.add_weight(shape=(input_shape,),
-                                     trainable=True,
+        self.omega = self.add_weight(trainable=True,
                                      initializer=tf.constant_initializer(self.omega_value))
 
     def call(self, x, f_x):
