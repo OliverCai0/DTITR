@@ -6,7 +6,8 @@ class Admin(tf.keras.layers.Layer):
         super(Admin, self).__init__(**kwargs)
 
         self.omega_value = ((num_res_layers + 1) / math.log(num_res_layers + 1) - 1) ** .5
-        self.input_shape = input_shape
+    
+    def build(self, input_shape):
         self.omega = self.add_weight(shape=(input_shape,),
                                      trainable=True,
                                      initializer=tf.constant_initializer(self.omega_value))
