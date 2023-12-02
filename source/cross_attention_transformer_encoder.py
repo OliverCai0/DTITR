@@ -6,6 +6,7 @@
 from mha_layer import *
 from layers_utils import *
 from lmha_layer import *
+from admin_tf import Admin
 
 
 class CrossAttnLayer(tf.keras.layers.Layer):
@@ -33,7 +34,7 @@ class CrossAttnLayer(tf.keras.layers.Layer):
     def __init__(self, d_model, cross_num_heads, x1_num_heads, x2_num_heads,
                  x1_d_ff, x2_d_ff, atv_fun, dropout_rate, x1_dim_k,
                  x1_parameter_sharing, x1_full_attention,
-                 x2_dim_k, x2_parameter_sharing, x2_full_attention, **kwargs):
+                 x2_dim_k, x2_parameter_sharing, x2_full_attention, num_of_res_layers, **kwargs):
         super(CrossAttnLayer, self).__init__(**kwargs)
 
         self.d_model = d_model
@@ -50,6 +51,7 @@ class CrossAttnLayer(tf.keras.layers.Layer):
         self.x2_dim_k = x2_dim_k
         self.x2_parameter_sharing = x2_parameter_sharing
         self.x2_full_attention = x2_full_attention
+        self.num_of_res_layers = num_of_res_layers
 
     def build(self, input_shape):
         self.mha_layer_1 = MultiHeadAttention(self.d_model, self.cross_num_heads, self.dropout_rate,
@@ -99,6 +101,8 @@ class CrossAttnLayer(tf.keras.layers.Layer):
 
         self.poswiseff_layer_2 = PosWiseFF(self.d_model, self.x2_d_ff, self.atv_fun, self.dropout_rate,
                                            name='pos_wise_ff_x2_cross')
+        self.admin1 = Admin(self.num_res_layers, input_shape)
+        self.admin2 = Admin(self.num_res_layers, input_shape)
 
     def rearrange_qkv(self, input1, input2):
         """
@@ -175,6 +179,7 @@ class CrossAttnLayer(tf.keras.layers.Layer):
 
         x21_qkv = tf.concat([x2_p_t, x1_t], axis=1)
 
+        #print(f'Debug: expanded: {tf.expand_dims(tf.gather(x12_qkv, 0, axis=1), axis=1).shape}, x12_qkv:{x12_qkv.shape}, x12_qkvgathered: {tf.gather(x12_qkv, 0, axis=1).shape}')
         attn_x12_out, attn_x12_w = self.mha_layer_1([tf.expand_dims(tf.gather(x12_qkv, 0, axis=1), axis=1),
                                                      x12_qkv, x12_qkv], mask=mask_x12)
 
@@ -199,8 +204,11 @@ class CrossAttnLayer(tf.keras.layers.Layer):
         else:
             attn_x2_out, attn_x2_w = self.mha_layer_4([x2_cross, x2_cross, x2_cross], mask=mask_x12)
 
-        x1_cross = self.ln_3(x1_cross + attn_x1_out)
-        x2_cross = self.ln_4(x2_cross + attn_x2_out)
+        x1admin = self.admin1(x1_cross, attn_x12_out)
+        x2admin = self.admin2(x2_cross, attn_x2_out)
+
+        x1_cross = self.ln_3(x1admin)
+        x2_cross = self.ln_4(x2admin)
 
         x1_cross_posff_out = self.poswiseff_layer_1(x1_cross)
         x2_cross_posff_out = self.poswiseff_layer_2(x2_cross)

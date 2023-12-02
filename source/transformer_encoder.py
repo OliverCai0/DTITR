@@ -6,6 +6,7 @@
 from lmha_layer import *
 from layers_utils import *
 from mha_layer import *
+from admin_tf import Admin
 
 
 class EncoderLayer(tf.keras.layers.Layer):
@@ -24,7 +25,7 @@ class EncoderLayer(tf.keras.layers.Layer):
 
     """
 
-    def __init__(self, d_model, num_heads, d_ff, atv_fun, dropout_rate, dim_k, parameter_sharing, full_attention,
+    def __init__(self, d_model, num_heads, d_ff, atv_fun, dropout_rate, dim_k, parameter_sharing, full_attention, num_of_res_layers,
                  **kwargs):
         super(EncoderLayer, self).__init__(**kwargs)
 
@@ -36,6 +37,7 @@ class EncoderLayer(tf.keras.layers.Layer):
         self.dim_k = dim_k
         self.parameter_sharing = parameter_sharing
         self.full_attention = full_attention
+        self.num_of_res_layers = num_of_res_layers
 
     def build(self, input_shape):
 
@@ -54,6 +56,7 @@ class EncoderLayer(tf.keras.layers.Layer):
 
         self.layernorm1 = tf.keras.layers.LayerNormalization(epsilon=1e-5, name='enc_norm1')
         self.layernorm2 = tf.keras.layers.LayerNormalization(epsilon=1e-5, name='enc_norm2')
+        self.admin = Admin(self.num_of_res_layers, input_shape)
 
     def call(self, inputs, mask=None):
         """
@@ -82,8 +85,8 @@ class EncoderLayer(tf.keras.layers.Layer):
 
         attn_out, attn_w = self.mha_layer([x, x, x], mask=mask)
 
-
-        sublayer1_out = self.layernorm1(x + attn_out)  # [batch_size, input_seq_len, d_model]
+        admined = self.admin(x, attn_out)
+        sublayer1_out = self.layernorm1(admined)  # [batch_size, input_seq_len, d_model]
 
         # Sublayer 2 (Position-Wise Feed Forward)
 
@@ -143,7 +146,7 @@ class Encoder(tf.keras.Model):
     def build(self, input_shape):
         self.enc_layers = [EncoderLayer(self.d_model, self.num_heads, self.d_ff, self.atv_fun,
                                         self.dropout_rate, self.dim_k, self.parameter_sharing,
-                                        self.full_attention, name='layer_enc%d' % i)
+                                        self.full_attention,num_layers, name='layer_enc%d' % i)
                            for i in range(self.num_layers)]
 
     def call(self, inputs, mask=None):
