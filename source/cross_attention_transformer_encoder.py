@@ -296,7 +296,8 @@ class CrossAttnBlock(tf.keras.Model):
                                                  self.x1_parameter_sharing,
                                                  self.x1_full_attention, self.x2_dim_k,
                                                  self.x2_parameter_sharing,
-                                                 self.x2_full_attention, name='layer_cross_attn%d' % i)
+                                                 self.x2_full_attention,
+                                                 self.num_layers, name='layer_cross_attn%d' % i)
                                   for i in range(self.num_layers)]
 
     def call(self, inputs, mask_12=None, mask_21=None):
