@@ -146,7 +146,7 @@ class Encoder(tf.keras.Model):
     def build(self, input_shape):
         self.enc_layers = [EncoderLayer(self.d_model, self.num_heads, self.d_ff, self.atv_fun,
                                         self.dropout_rate, self.dim_k, self.parameter_sharing,
-                                        self.full_attention,num_layers, name='layer_enc%d' % i)
+                                        self.full_attention,self.num_layers, name='layer_enc%d' % i)
                            for i in range(self.num_layers)]
 
     def call(self, inputs, mask=None):
