@@ -12,4 +12,4 @@ class Admin(tf.keras.layers.Layer):
                                      initializer=tf.constant_initializer(self.omega_value))
 
     def call(self, x, f_x):
-        return x * self.omega + f_x
+        return self.omega(x)+ f_x
