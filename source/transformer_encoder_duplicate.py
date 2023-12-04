@@ -6,6 +6,7 @@
 from lmha_layer import *
 from layers_utils import *
 from mha_layer import *
+from admin_tf import Admin
 
 
 class EncoderLayer(tf.keras.layers.Layer):
@@ -24,7 +25,7 @@ class EncoderLayer(tf.keras.layers.Layer):
 
     """
 
-    def __init__(self, d_model, num_heads, d_ff, atv_fun, dropout_rate, dim_k, parameter_sharing, full_attention,
+    def __init__(self, d_model, num_heads, d_ff, atv_fun, dropout_rate, dim_k, parameter_sharing, full_attention, num_of_res_layers,
                  **kwargs):
         super(EncoderLayer, self).__init__(**kwargs)
 
@@ -36,90 +37,64 @@ class EncoderLayer(tf.keras.layers.Layer):
         self.dim_k = dim_k
         self.parameter_sharing = parameter_sharing
         self.full_attention = full_attention
+        self.num_of_res_layers = num_of_res_layers
 
     def build(self, input_shape):
-        self.d_model = input_shape[-1]
 
-        # Define the 1x1 convolutions for ACmix
-        self.qkv_conv = tf.keras.layers.Conv2D(filters=self.d_model * 3, kernel_size=(1, 1), strides=(1, 1))
+        if self.full_attention:
+            self.mha_layer = MultiHeadAttention(self.d_model, self.num_heads, self.dropout_rate,
+                                                name='enc_self_attn')
 
-        # Fully connected layer for ACmix
-        self.fc = tf.keras.layers.Conv2D(filters=self.d_model, kernel_size=(1, 1), strides=(1, 1))
+        else:
+            self.E_proj = linear_proj_matrix(self.dim_k)
 
-        # Depthwise convolution for ACmix
-        self.depthwise_conv = tf.keras.layers.DepthwiseConv2D(kernel_size=(3, 3), padding='same')
-
-        # Learnable parameters for combining the self-attention and convolution outputs
-        self.alpha = self.add_weight(name='alpha', shape=[], initializer='ones', trainable=True)
-        self.beta = self.add_weight(name='beta', shape=[], initializer='ones', trainable=True)
+            self.mha_layer = LMHAttention(self.d_model, self.num_heads, self.dropout_rate, self.parameter_sharing,
+                                          self.dim_k,
+                                          self.E_proj, self.E_proj, name='enc_self_lattn')
 
         self.poswiseff_layer = PosWiseFF(self.d_model, self.d_ff, self.atv_fun, self.dropout_rate, name='pos_wise_ff')
+
         self.layernorm1 = tf.keras.layers.LayerNormalization(epsilon=1e-5, name='enc_norm1')
         self.layernorm2 = tf.keras.layers.LayerNormalization(epsilon=1e-5, name='enc_norm2')
+        self.admin = Admin(self.num_of_res_layers, input_shape)
 
     def call(self, inputs, mask=None):
-        x = inputs
-        B, L, E = tf.shape(x)[0], tf.shape(x)[1], tf.shape(x)[2]
-
-        # Reshape input for convolution operations
-        x_reshaped = tf.reshape(x, (B, tf.sqrt(L), tf.sqrt(L), E))
-
-        # Apply 1x1 convolution (qkv_conv)
-        qkv = self.qkv_conv(x_reshaped)
-        q, k, v = tf.split(qkv, 3, axis=-1)
-
-        # Self-attention operation
-        attn_out = self.self_attention(q, k, v, mask)
-
-        # Apply fully connected layer
-        f_out = self.fc(qkv)
-
-        # Apply depthwise convolution
-        conv_out = self.depthwise_conv(f_out)
-
-        # Reshape the output back to the original shape
-        conv_out = tf.reshape(conv_out, (B, L, E))
-
-        # Combine self-attention and convolution outputs
-        attn_out = self.alpha * attn_out + self.beta * conv_out
-
-        sublayer1_out = self.layernorm1(x + attn_out)
-
-        # Position-Wise Feed Forward
-        poswiseff_out = self.poswiseff_layer(sublayer1_out)
-        sublayer2_out = self.layernorm2(sublayer1_out + poswiseff_out)
-
-        return sublayer2_out
-
-    def self_attention(self, q, k, v, mask=None):
         """
-        Calculate the self-attention.
 
         Args:
-        - q: Queries. Tensor of shape (B, H, W, C)
-        - k: Keys. Tensor of shape (B, H, W, C)
-        - v: Values. Tensor of shape (B, H, W, C)
-        - mask: (optional) Mask to apply on the attention scores.
+        - inputs: input sequences
+        - mask: attention weights mask
 
-        Returns:
-        - Attention output. Tensor of shape (B, H*W, C)
+        Shape:
+        - Inputs:
+        - inputs: (B,L,E): where B is the batch size, L is the input sequence length,
+                        E is the embedding dimension
+        - mask: (B,1,1,L): where B is the batch size, L is the input sequence length
+
+        - Outputs:
+        - sublayer2_out: (B,E,L):  where B is the batch size, L is the input sequence length,
+                        E is the embedding dimension
+        - attn_w: (B,H,L,L): where B is the batch size, H is the number of heads,
+                        L is the input sequence length.
+
         """
-        matmul_qk = tf.matmul(q, k, transpose_b=True)  # (B, H*W, H*W)
 
-        # Scale matmul_qk
-        dk = tf.cast(tf.shape(k)[-1], tf.float32)
-        scaled_attention_logits = matmul_qk / tf.math.sqrt(dk)
+        # Sublayer 1 (Attention Layer)
 
-        # Add the mask to the scaled tensor.
-        if mask is not None:
-            scaled_attention_logits += (mask * -1e9)  
+        x = inputs
 
-        # Softmax is normalized on the last axis (seq_len_k)
-        attention_weights = tf.nn.softmax(scaled_attention_logits, axis=-1)  # (B, H*W, H*W)
+        attn_out, attn_w = self.mha_layer([x, x, x], mask=mask)
 
-        output = tf.matmul(attention_weights, v)  # (B, H*W, C)
+        admined = self.admin(x, attn_out)
+        sublayer1_out = self.layernorm1(admined)  # [batch_size, input_seq_len, d_model]
 
-        return output
+        # Sublayer 2 (Position-Wise Feed Forward)
+
+        poswiseff_out = self.poswiseff_layer(sublayer1_out)
+
+        sublayer2_out = self.layernorm2(sublayer1_out + poswiseff_out)  # [batch_size, input_seq_len, d_model]
+
+        return sublayer2_out, attn_w
 
     def get_config(self):
         config = super(EncoderLayer, self).get_config()
@@ -171,7 +146,7 @@ class Encoder(tf.keras.Model):
     def build(self, input_shape):
         self.enc_layers = [EncoderLayer(self.d_model, self.num_heads, self.d_ff, self.atv_fun,
                                         self.dropout_rate, self.dim_k, self.parameter_sharing,
-                                        self.full_attention, name='layer_enc%d' % i)
+                                        self.full_attention,self.num_layers, name='layer_enc%d' % i)
                            for i in range(self.num_layers)]
 
     def call(self, inputs, mask=None):
