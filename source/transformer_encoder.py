@@ -61,8 +61,14 @@ class EncoderLayer(tf.keras.layers.Layer):
         x = inputs
         B, L, E = tf.shape(x)[0], tf.shape(x)[1], tf.shape(x)[2]
 
+        # Convert L to a float, apply sqrt, then convert back to an integer
+        sqrt_L = tf.cast(tf.sqrt(tf.cast(L, tf.float32)), tf.int32)
+
+        # Ensure that the sqrt_L * sqrt_L is not greater than L
+        sqrt_L = tf.minimum(sqrt_L, tf.cast(tf.sqrt(tf.cast(L, tf.float32)), tf.int32))
+
         # Reshape input for convolution operations
-        x_reshaped = tf.reshape(x, (B, tf.sqrt(L), tf.sqrt(L), E))
+        x_reshaped = tf.reshape(x, (B, sqrt_L, sqrt_L, E))
 
         # Apply 1x1 convolution (qkv_conv)
         qkv = self.qkv_conv(x_reshaped)
