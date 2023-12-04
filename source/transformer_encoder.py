@@ -108,10 +108,10 @@ class EncoderLayer(tf.keras.layers.Layer):
         # Adding a singleton 'width' dimension
         inputs_reshaped = tf.expand_dims(inputs, axis=2)  # New shape: (batch_size, 557, 1, 128)
 
-        # Apply 1x1 convolutions to the reshaped inputs
-        q_proj = self.conv1x1_q(inputs_reshaped)
-        k_proj = self.conv1x1_k(inputs_reshaped)
-        v_proj = self.conv1x1_v(inputs_reshaped)
+        # Use the correct convolutional layers
+        q_proj = self.conv_q(inputs_reshaped)
+        k_proj = self.conv_k(inputs_reshaped)
+        v_proj = self.conv_v(inputs_reshaped)
 
         # Reshape the convoluted outputs back to the original dimensions
         # Removing the singleton dimension added earlier
