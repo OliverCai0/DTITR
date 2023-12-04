@@ -10,7 +10,7 @@ class Admin(tf.keras.layers.Layer):
     def build(self, input_shape):
         self.omega = self.add_weight(name="admin-parameter",
                                      trainable=True,
-                                     shape=input_shape,
+                                     shape=input_shape[-1],
                                      initializer=tf.constant_initializer(self.omega_value))
 
     def call(self, x, f_x):
