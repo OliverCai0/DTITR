@@ -97,12 +97,20 @@ class EncoderLayer(tf.keras.layers.Layer):
 
         """
 
-        inputs_reshaped = tf.expand_dims(inputs, axis=2)  # New shape: (batch_size, seq_length, 1, channels)
+        # Reshape the input to 4D for compatibility with Conv2D
+        # Adding a singleton 'width' dimension
+        inputs_reshaped = tf.expand_dims(inputs, axis=2)  # New shape: (batch_size, 557, 1, 128)
 
-        # Apply 1x1 convolutions to input features
+        # Apply 1x1 convolutions to the reshaped inputs
         q_proj = self.conv1x1_q(inputs_reshaped)
         k_proj = self.conv1x1_k(inputs_reshaped)
         v_proj = self.conv1x1_v(inputs_reshaped)
+
+        # Reshape the convoluted outputs back to the original dimensions
+        # Removing the singleton dimension added earlier
+        q_proj = tf.squeeze(q_proj, axis=2)
+        k_proj = tf.squeeze(k_proj, axis=2)
+        v_proj = tf.squeeze(v_proj, axis=2)
 
         # Self-Attention Path
         attn_out, attn_w = self.mha_layer([q_proj, k_proj, v_proj], mask=mask)
