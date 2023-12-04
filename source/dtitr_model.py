@@ -353,7 +353,6 @@ def run_train_model(FLAGS):
             folder_path=model_path,
             path_in_repo=f'DTITR-{FLAGS.hugging_save}',
             repo_id="DLSAutumn2023/DTITR_Recreation",
-            token=HfFolder.get_token()  # Pass the token for authentication
         )
 
 
