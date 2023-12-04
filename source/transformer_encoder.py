@@ -98,22 +98,23 @@ class EncoderLayer(tf.keras.layers.Layer):
         return sublayer2_out
 
     def self_attention(self, q, k, v, mask=None):
-        matmul_qk = tf.matmul(q, k, transpose_b=True)  # (B, H*W, H*W)
+        # Calculate the dot product between queries and keys
+        matmul_qk = tf.matmul(q, k, transpose_b=True)  # Shape: (B, sequence_length, sequence_length)
 
-        # Scale matmul_qk
+        # Scale the attention scores
         dk = tf.cast(tf.shape(k)[-1], tf.float32)
-        scaled_attention_logits = matmul_qk / tf.math.sqrt(dk)
+        scaled_attention_logits = matmul_qk / tf.math.sqrt(dk)  # Shape: (B, sequence_length, sequence_length)
 
-        # Apply the mask (if provided)
+        # Apply the mask
         if mask is not None:
-            # Reshape the mask to make it broadcastable to the shape of scaled_attention_logits
-            mask = tf.reshape(mask, [tf.shape(mask)[0], 1, 1, tf.shape(mask)[-1]])
+            # Add a large negative number to masked positions, effectively zeroing them out after softmax
             scaled_attention_logits += (mask * -1e9)
 
-        # Softmax is normalized on the last axis (seq_len_k)
-        attention_weights = tf.nn.softmax(scaled_attention_logits, axis=-1)  # (B, H*W, H*W)
+        # Apply softmax to get attention weights
+        attention_weights = tf.nn.softmax(scaled_attention_logits, axis=-1)
 
-        output = tf.matmul(attention_weights, v)  # (B, H*W, C)
+        # Multiply by values
+        output = tf.matmul(attention_weights, v)  # Shape: (B, sequence_length, depth_v)
 
         return output
 
