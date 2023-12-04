@@ -339,7 +339,7 @@ def run_train_model(FLAGS):
 
     if FLAGS.hugging_save:
 
-        model_path = 'dtitr_model.h5'
+        model_path = 'dtitr_model.tf'
         if os.path.exists(model_path):
             os.remove(model_path)  # Removes the file to avoid the 'name already exists' error
         
