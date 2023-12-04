@@ -338,11 +338,15 @@ def run_train_model(FLAGS):
     mse, rmse, ci = dtitr_model.evaluate([prot_test, smiles_test], kd_test)
 
     if FLAGS.hugging_save:
+
+        model_path = 'dtitr_model.h5'
+        if os.path.exists(model_path):
+            os.remove(model_path)  # Removes the file to avoid the 'name already exists' error
         
-        dtitr_model.save(f'dtitr_model.h5', overwrite=True)
+        dtitr_model.save(model_path, overwrite=True)
         api = HfApi()
         api.upload_file(
-            path_or_fileobj= os.path.join(os.getcwd(), 'dtitr_model.h5'),  
+            path_or_fileobj= os.path.join(os.getcwd(), model_path),  
             path_in_repo=f'DTITR-{FLAGS.hugging_save}',
             repo_id="DLSAutumn2023/DTITR_Recreation"
         )
