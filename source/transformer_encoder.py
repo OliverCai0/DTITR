@@ -37,10 +37,10 @@ class EncoderLayer(tf.keras.layers.Layer):
         self.parameter_sharing = parameter_sharing
         self.full_attention = full_attention
 
-         # ACMix: Three 1x1 convolutions
-        self.conv1x1_q = tf.keras.layers.Conv2D(filters=d_model, kernel_size=1, use_bias=True)
-        self.conv1x1_k = tf.keras.layers.Conv2D(filters=d_model, kernel_size=1, use_bias=True)
-        self.conv1x1_v = tf.keras.layers.Conv2D(filters=d_model, kernel_size=1, use_bias=True)
+        # Define convolutional layers for the convolution path
+        self.conv_q = tf.keras.layers.Conv2D(filters=d_model, kernel_size=1, use_bias=True)
+        self.conv_k = tf.keras.layers.Conv2D(filters=d_model, kernel_size=1, use_bias=True)
+        self.conv_v = tf.keras.layers.Conv2D(filters=d_model, kernel_size=1, use_bias=True)
 
         # ACMix: Initialize alpha and beta
         self.alpha = tf.Variable(initial_value=1.0, trainable=True)
@@ -65,20 +65,20 @@ class EncoderLayer(tf.keras.layers.Layer):
         self.layernorm2 = tf.keras.layers.LayerNormalization(epsilon=1e-5, name='enc_norm2')
     
     def convolution_path(self, q_proj, k_proj, v_proj):
-        # Reshape the projected features to 4D for Conv2D compatibility
+        # Reshape projected features for Conv2D compatibility
         q_proj_reshaped = tf.expand_dims(q_proj, axis=2)
         k_proj_reshaped = tf.expand_dims(k_proj, axis=2)
         v_proj_reshaped = tf.expand_dims(v_proj, axis=2)
 
-        # Apply 1x1 convolution to each of the reshaped projected features
-        conv_q = tf.keras.layers.Conv2D(filters=self.d_model, kernel_size=1, use_bias=True)(q_proj_reshaped)
-        conv_k = tf.keras.layers.Conv2D(filters=self.d_model, kernel_size=1, use_bias=True)(k_proj_reshaped)
-        conv_v = tf.keras.layers.Conv2D(filters=self.d_model, kernel_size=1, use_bias=True)(v_proj_reshaped)
+        # Apply predefined convolutional layers
+        conv_q = self.conv_q(q_proj_reshaped)
+        conv_k = self.conv_k(k_proj_reshaped)
+        conv_v = self.conv_v(v_proj_reshaped)
 
-        # Combine the convolution outputs
+        # Combine convolution outputs
         combined_conv_output = conv_q + conv_k + conv_v
 
-        # Reshape back to the original dimensions (if necessary)
+        # Reshape back to original dimensions (if necessary)
         combined_conv_output = tf.squeeze(combined_conv_output, axis=2)
 
         return combined_conv_output
