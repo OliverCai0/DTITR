@@ -15,7 +15,7 @@ from argument_parser import *
 import gc
 from plot_utils import *
 from utils import *
-from huggingface_hub import HfApi
+from huggingface_hub import HfApi, HfFolder
 from datetime import datetime
 import time
 
@@ -338,17 +338,22 @@ def run_train_model(FLAGS):
     mse, rmse, ci = dtitr_model.evaluate([prot_test, smiles_test], kd_test)
 
     if FLAGS.hugging_save:
-
         model_path = 'dtitr_model.tf'
-        if os.path.exists(model_path):
-            os.remove(model_path)  # Removes the file to avoid the 'name already exists' error
-        
+        # No need to check if the path exists or to remove it since 'save' will overwrite by default.
+
+        # Save the model in the TensorFlow SavedModel format (directory).
         dtitr_model.save(model_path, overwrite=True)
+        
+        # Authenticate with Hugging Face Hub using your token.
         api = HfApi()
-        api.upload_file(
-            path_or_fileobj= os.path.join(os.getcwd(), model_path),  
+        api.set_access_token(HfFolder.get_token())
+        
+        # Upload the model directory to the repository.
+        api.upload_folder(
+            folder_path=model_path,
             path_in_repo=f'DTITR-{FLAGS.hugging_save}',
-            repo_id="DLSAutumn2023/DTITR_Recreation"
+            repo_id="DLSAutumn2023/DTITR_Recreation",
+            token=HfFolder.get_token()  # Pass the token for authentication
         )
 
 
