@@ -342,7 +342,7 @@ def run_train_model(FLAGS):
         dtitr_model.save(f'dtitr_model.pb', overwrite=True)
         api = HfApi()
         api.upload_file(
-            path_or_fileobj= os.path.join(os.getcwd(), 'dtitr_model.pb'),  
+            path_or_fileobj= os.path.join(os.getcwd(), 'dtitr_model/saved_model.pb'),  
             path_in_repo=f'DTITR-{FLAGS.hugging_save}',
             repo_id="DLSAutumn2023/DTITR_Recreation"
         )
