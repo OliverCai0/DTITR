@@ -6,7 +6,6 @@
 from lmha_layer import *
 from layers_utils import *
 from mha_layer import *
-from admin_tf import Admin
 
 
 class EncoderLayer(tf.keras.layers.Layer):
