@@ -101,8 +101,8 @@ class CrossAttnLayer(tf.keras.layers.Layer):
 
         self.poswiseff_layer_2 = PosWiseFF(self.d_model, self.x2_d_ff, self.atv_fun, self.dropout_rate,
                                            name='pos_wise_ff_x2_cross')
-        self.admin1 = Admin(self.num_of_res_layers, input_shape)
-        self.admin2 = Admin(self.num_of_res_layers, input_shape)
+        self.admin1 = Admin(self.num_of_res_layers)
+        self.admin2 = Admin(self.num_of_res_layers)
 
     def rearrange_qkv(self, input1, input2):
         """

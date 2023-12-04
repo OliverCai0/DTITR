@@ -56,7 +56,7 @@ class EncoderLayer(tf.keras.layers.Layer):
 
         self.layernorm1 = tf.keras.layers.LayerNormalization(epsilon=1e-5, name='enc_norm1')
         self.layernorm2 = tf.keras.layers.LayerNormalization(epsilon=1e-5, name='enc_norm2')
-        self.admin = Admin(self.num_of_res_layers, input_shape)
+        self.admin = Admin(self.num_of_res_layers)
 
     def call(self, inputs, mask=None):
         """
