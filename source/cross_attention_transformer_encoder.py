@@ -6,7 +6,7 @@
 from mha_layer import *
 from layers_utils import *
 from lmha_layer import *
-from admin_tf import Admin
+# from admin_tf import Admin
 
 
 class CrossAttnLayer(tf.keras.layers.Layer):
@@ -101,8 +101,8 @@ class CrossAttnLayer(tf.keras.layers.Layer):
 
         self.poswiseff_layer_2 = PosWiseFF(self.d_model, self.x2_d_ff, self.atv_fun, self.dropout_rate,
                                            name='pos_wise_ff_x2_cross')
-        self.admin1 = Admin(self.num_of_res_layers)
-        self.admin2 = Admin(self.num_of_res_layers)
+        # self.admin1 = Admin(self.num_of_res_layers)
+        # self.admin2 = Admin(self.num_of_res_layers)
 
     def rearrange_qkv(self, input1, input2):
         """
@@ -179,36 +179,47 @@ class CrossAttnLayer(tf.keras.layers.Layer):
 
         x21_qkv = tf.concat([x2_p_t, x1_t], axis=1)
 
+        normed_x12_qkv = self.ln_1(x12_qkv)
+        normed_x21_qkv = self.ln_2(x21_qkv)
+
         #print(f'Debug: expanded: {tf.expand_dims(tf.gather(x12_qkv, 0, axis=1), axis=1).shape}, x12_qkv:{x12_qkv.shape}, x12_qkvgathered: {tf.gather(x12_qkv, 0, axis=1).shape}')
-        attn_x12_out, attn_x12_w = self.mha_layer_1([tf.expand_dims(tf.gather(x12_qkv, 0, axis=1), axis=1),
-                                                     x12_qkv, x12_qkv], mask=mask_x12)
+        attn_x12_out, attn_x12_w = self.mha_layer_1([tf.expand_dims(tf.gather(normed_x12_qkv, 0, axis=1), axis=1),
+                                                     normed_x12_qkv, normed_x12_qkv], mask=mask_x12)
 
-        attn_x21_out, attn_x21_w = self.mha_layer_2([tf.expand_dims(tf.gather(x21_qkv, 0, axis=1), axis=1),
-                                                     x21_qkv, x21_qkv], mask=mask_x21)
+        attn_x21_out, attn_x21_w = self.mha_layer_2([tf.expand_dims(tf.gather(normed_x21_qkv, 0, axis=1), axis=1),
+                                                     normed_x21_qkv, normed_x21_qkv], mask=mask_x21)
 
-        x1_p_t_cross = self.ln_1(x1_p_t + attn_x12_out)
-        x2_p_t_cross = self.ln_2(x2_p_t + attn_x21_out)
+        # x1_p_t_cross = self.ln_1(x1_p_t + attn_x12_out)
+        # x2_p_t_cross = self.ln_2(x2_p_t + attn_x21_out)
+
+        x1_p_t_cross = x1_p_t + attn_x12_out
+        x2_p_t_cross = x2_p_t + attn_x21_out
 
         x1_cross = tf.concat([x1_p_t_cross, x1_t], axis=1)
         x2_cross = tf.concat([x2_p_t_cross, x2_t], axis=1)
 
+        normed_x1_cross = self.ln_5(x1_cross)
+        normed_x2_cross = self.ln_6(x2_cross)
+
         if self.x1_full_attention:
-            attn_x1_out, attn_x1_w = self.mha_layer_3([x1_cross, x1_cross, x1_cross], mask=mask_x21)
+            attn_x1_out, attn_x1_w = self.mha_layer_3([normed_x1_cross, normed_x1_cross, normed_x1_cross], mask=mask_x21)
 
         else:
-            attn_x1_out, attn_x1_w = self.mha_layer_3([x1_cross, x1_cross, x1_cross], mask=mask_x21)
+            attn_x1_out, attn_x1_w = self.mha_layer_3([normed_x1_cross, normed_x1_cross, normed_x1_cross], mask=mask_x21)
 
         if self.x2_full_attention:
-            attn_x2_out, attn_x2_w = self.mha_layer_4([x2_cross, x2_cross, x2_cross], mask=mask_x12)
+            attn_x2_out, attn_x2_w = self.mha_layer_4([normed_x2_cross, normed_x2_cross, normed_x2_cross], mask=mask_x12)
 
         else:
-            attn_x2_out, attn_x2_w = self.mha_layer_4([x2_cross, x2_cross, x2_cross], mask=mask_x12)
+            attn_x2_out, attn_x2_w = self.mha_layer_4([normed_x2_cross, normed_x2_cross, normed_x2_cross], mask=mask_x12)
 
-        x1admin = self.admin1(x1_cross, attn_x12_out)
-        x2admin = self.admin2(x2_cross, attn_x2_out)
+        # x1admin = self.admin1(x1_cross, attn_x1_out)
+        # x2admin = self.admin2(x2_cross, attn_x2_out)
 
-        x1_cross = self.ln_3(x1admin)
-        x2_cross = self.ln_4(x2admin)
+        # x1_cross = self.ln_3(x1admin)
+        # x2_cross = self.ln_4(x2admin)
+        x1_cross = x1_cross + attn_x1_out
+        x2_cross = x2_cross + attn_x2_out
 
         x1_cross_posff_out = self.poswiseff_layer_1(x1_cross)
         x2_cross_posff_out = self.poswiseff_layer_2(x2_cross)
