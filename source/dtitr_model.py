@@ -49,6 +49,7 @@ def build_dtitr_model(FLAGS, prot_trans_depth, smiles_trans_depth, cross_attn_de
     - dtitr_model
 
     """
+    print("---------------------This is the Pre-LN -------------------------")
 
     if FLAGS.bpe_option[0]:
         prot_input = tf.keras.Input(shape=(FLAGS.protein_bpe_len + 1,), dtype=tf.int32, name='protein_input')
