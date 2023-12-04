@@ -346,7 +346,6 @@ def run_train_model(FLAGS):
         
         # Authenticate with Hugging Face Hub using your token.
         api = HfApi()
-        api.set_access_token(HfFolder.get_token())
         
         # Upload the model directory to the repository.
         api.upload_folder(
