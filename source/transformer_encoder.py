@@ -97,6 +97,8 @@ class EncoderLayer(tf.keras.layers.Layer):
 
         """
 
+        inputs_reshaped = tf.expand_dims(inputs, axis=2)  # New shape: (batch_size, seq_length, 1, channels)
+
         # Apply 1x1 convolutions to input features
         q_proj = self.conv1x1_q(inputs)
         k_proj = self.conv1x1_k(inputs)
