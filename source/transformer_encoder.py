@@ -100,9 +100,9 @@ class EncoderLayer(tf.keras.layers.Layer):
         inputs_reshaped = tf.expand_dims(inputs, axis=2)  # New shape: (batch_size, seq_length, 1, channels)
 
         # Apply 1x1 convolutions to input features
-        q_proj = self.conv1x1_q(inputs)
-        k_proj = self.conv1x1_k(inputs)
-        v_proj = self.conv1x1_v(inputs)
+        q_proj = self.conv1x1_q(inputs_reshaped)
+        k_proj = self.conv1x1_k(inputs_reshaped)
+        v_proj = self.conv1x1_v(inputs_reshaped)
 
         # Self-Attention Path
         attn_out, attn_w = self.mha_layer([q_proj, k_proj, v_proj], mask=mask)
