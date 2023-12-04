@@ -338,8 +338,7 @@ def run_train_model(FLAGS):
     mse, rmse, ci = dtitr_model.evaluate([prot_test, smiles_test], kd_test)
 
     if FLAGS.hugging_save:
-        timestamp = time.strftime("%Y%m%d-%H%M%S")
-        dtitr_model.save(f'dtitr_model_{timestamp}.h5')
+        dtitr_model.save(f'dtitr_model_.h5', overwrite=True)
         api = HfApi()
         api.upload_file(
             path_or_fileobj= os.path.join(os.getcwd(), 'dtitr_model.h5'),  
