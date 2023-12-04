@@ -98,27 +98,17 @@ class EncoderLayer(tf.keras.layers.Layer):
         return sublayer2_out
 
     def self_attention(self, q, k, v, mask=None):
-        """
-        Calculate the self-attention.
-
-        Args:
-        - q: Queries. Tensor of shape (B, H, W, C)
-        - k: Keys. Tensor of shape (B, H, W, C)
-        - v: Values. Tensor of shape (B, H, W, C)
-        - mask: (optional) Mask to apply on the attention scores.
-
-        Returns:
-        - Attention output. Tensor of shape (B, H*W, C)
-        """
         matmul_qk = tf.matmul(q, k, transpose_b=True)  # (B, H*W, H*W)
 
         # Scale matmul_qk
         dk = tf.cast(tf.shape(k)[-1], tf.float32)
         scaled_attention_logits = matmul_qk / tf.math.sqrt(dk)
 
-        # Add the mask to the scaled tensor.
+        # Apply the mask (if provided)
         if mask is not None:
-            scaled_attention_logits += (mask * -1e9)  
+            # Reshape the mask to make it broadcastable to the shape of scaled_attention_logits
+            mask = tf.reshape(mask, [tf.shape(mask)[0], 1, 1, tf.shape(mask)[-1]])
+            scaled_attention_logits += (mask * -1e9)
 
         # Softmax is normalized on the last axis (seq_len_k)
         attention_weights = tf.nn.softmax(scaled_attention_logits, axis=-1)  # (B, H*W, H*W)
@@ -126,6 +116,7 @@ class EncoderLayer(tf.keras.layers.Layer):
         output = tf.matmul(attention_weights, v)  # (B, H*W, C)
 
         return output
+
 
     def get_config(self):
         config = super(EncoderLayer, self).get_config()
