@@ -220,11 +220,11 @@ class CrossAttnLayer(tf.keras.layers.Layer):
         x1_cross = self.ln_5(x1_cross + x1_cross_posff_out)
         x2_cross = self.ln_6(x2_cross + x2_cross_posff_out)
         
-        if self.first_pass:
-            f = open('./variance_output', 'a')
-            f.write(f'{self.name},attn_x12_out:{np.var(attn_x12_out.numpy().flatten())},attn_x21_out:{np.var(attn_x21_out.numpy().flatten())},attn_x1_out:{np.var(attn_x1_out.numpy().flatten())},attn_x2_out:{np.var(attn_x2_out.numpy().flatten())}\n')
-            f.close()
-            self.first_pass = False
+        # if self.first_pass:
+        #     f = open('./variance_output', 'a')
+        #     f.write(f'{self.name},attn_x12_out:{np.var(attn_x12_out.numpy().flatten())},attn_x21_out:{np.var(attn_x21_out.numpy().flatten())},attn_x1_out:{np.var(attn_x1_out.numpy().flatten())},attn_x2_out:{np.var(attn_x2_out.numpy().flatten())}\n')
+        #     f.close()
+        #     self.first_pass = False
 
         return [x1_cross, x2_cross], attn_x12_w, attn_x21_w, attn_x1_w, attn_x2_w
 
