@@ -190,8 +190,7 @@ class CrossAttnLayer(tf.keras.layers.Layer):
         attn_x21_out, attn_x21_w = self.mha_layer_2([tf.expand_dims(tf.gather(x21_qkv, 0, axis=1), axis=1),
                                                      x21_qkv, x21_qkv], mask=mask_x21)
 
-        x1_p_t_cross = self.ln_1(x1_p_t * self.admin1 + 
-        )
+        x1_p_t_cross = self.ln_1(x1_p_t * self.admin1 + attn_x12_out)
         x2_p_t_cross = self.ln_2(x2_p_t * self.admin2 + attn_x21_out)
 
         x1_cross = tf.concat([x1_p_t_cross, x1_t], axis=1)

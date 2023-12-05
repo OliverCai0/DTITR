@@ -10,7 +10,7 @@ from lmha_layer import *
 import tensorflow as tf
 import numpy as np
 
-class CrossAttnLayer(tf.keras.layers.Layer):
+class CrossAttnLayerWithWrite(tf.keras.layers.Layer):
     """
     Cross-Attention Encoder Layer
 
@@ -36,7 +36,7 @@ class CrossAttnLayer(tf.keras.layers.Layer):
                  x1_d_ff, x2_d_ff, atv_fun, dropout_rate, x1_dim_k,
                  x1_parameter_sharing, x1_full_attention,
                  x2_dim_k, x2_parameter_sharing, x2_full_attention, num_of_res_layers, **kwargs):
-        super(CrossAttnLayer, self).__init__(**kwargs)
+        super(CrossAttnLayerWithWrite, self).__init__(**kwargs)
 
         self.d_model = d_model
         self.cross_num_heads = cross_num_heads
@@ -190,8 +190,7 @@ class CrossAttnLayer(tf.keras.layers.Layer):
         attn_x21_out, attn_x21_w = self.mha_layer_2([tf.expand_dims(tf.gather(x21_qkv, 0, axis=1), axis=1),
                                                      x21_qkv, x21_qkv], mask=mask_x21)
 
-        x1_p_t_cross = self.ln_1(x1_p_t * self.admin1 + 
-        )
+        x1_p_t_cross = self.ln_1(x1_p_t * self.admin1 + attn_x12_out)
         x2_p_t_cross = self.ln_2(x2_p_t * self.admin2 + attn_x21_out)
 
         x1_cross = tf.concat([x1_p_t_cross, x1_t], axis=1)
@@ -231,7 +230,7 @@ class CrossAttnLayer(tf.keras.layers.Layer):
 
 
 def get_config(self):
-    config = super(CrossAttnLayer, self).get_config()
+    config = super(CrossAttnLayerWithWrite, self).get_config()
     config.update({
         'd_model': self.d_model,
         'cross_num_heads': self.cross_num_heads,
@@ -251,7 +250,7 @@ def get_config(self):
     return config
 
 
-class CrossAttnBlock(tf.keras.Model):
+class CrossAttnBlockWithWrite(tf.keras.Model):
     """
     Cross-Attention Transformer-Encoder
 
@@ -280,7 +279,7 @@ class CrossAttnBlock(tf.keras.Model):
                  x2_dim_k, x2_parameter_sharing, x2_full_attention,
                  return_intermediate=False, **kwargs):
 
-        super(CrossAttnBlock, self).__init__(**kwargs)
+        super(CrossAttnBlockWithWrite, self).__init__(**kwargs)
 
         self.d_model = d_model
         self.num_layers = num_layers
@@ -301,7 +300,7 @@ class CrossAttnBlock(tf.keras.Model):
         self.first_pass = True
 
     def build(self, input_shape):
-        self.cross_attn_layers = [CrossAttnLayer(self.d_model, self.cross_num_heads, self.x1_num_heads,
+        self.cross_attn_layers = [CrossAttnLayerWithWrite(self.d_model, self.cross_num_heads, self.x1_num_heads,
                                                  self.x2_num_heads,
                                                  self.x1_d_ff, self.x2_d_ff, self.atv_fun,
                                                  self.dropout_rate, self.x1_dim_k,
@@ -361,7 +360,7 @@ class CrossAttnBlock(tf.keras.Model):
         return x, attention_weights
 
     def get_config(self):
-        config = super(CrossAttnBlock, self).get_config()
+        config = super(CrossAttnBlockWithWrite, self).get_config()
         config.update({
             'd_model': self.d_model,
             'num_layers': self.num_layers,

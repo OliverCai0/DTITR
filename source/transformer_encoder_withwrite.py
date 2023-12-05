@@ -11,7 +11,7 @@ import tensorflow as tf
 import numpy as np
 
 
-class EncoderLayer(tf.keras.layers.Layer):
+class EncoderLayerWithWrite(tf.keras.layers.Layer):
     """
     Encoder Layer of the Transformer-Encoder
 
@@ -29,7 +29,7 @@ class EncoderLayer(tf.keras.layers.Layer):
 
     def __init__(self, d_model, num_heads, d_ff, atv_fun, dropout_rate, dim_k, parameter_sharing, full_attention, num_of_res_layers, parent_name,
                  **kwargs):
-        super(EncoderLayer, self).__init__(**kwargs)
+        super(EncoderLayerWithWrite, self).__init__(**kwargs)
 
         self.d_model = d_model
         self.num_heads = num_heads
@@ -106,7 +106,7 @@ class EncoderLayer(tf.keras.layers.Layer):
         return sublayer2_out, attn_w
 
     def get_config(self):
-        config = super(EncoderLayer, self).get_config()
+        config = super(EncoderLayerWithWrite, self).get_config()
         config.update({
             'd_model': self.d_model,
             'num_heads': self.num_heads,
@@ -120,7 +120,7 @@ class EncoderLayer(tf.keras.layers.Layer):
         return config
 
 
-class Encoder(tf.keras.Model):
+class EncoderWithWrite(tf.keras.Model):
     """
     Transformer-Encoder
 
@@ -139,7 +139,7 @@ class Encoder(tf.keras.Model):
     """
     def __init__(self, d_model, num_layers, num_heads, d_ff, atv_fun, dropout_rate,
                  dim_k, parameter_sharing, full_attention, return_intermediate=False, **kwargs):
-        super(Encoder, self).__init__(**kwargs)
+        super(EncoderWithWrite, self).__init__(**kwargs)
 
         self.d_model = d_model
         self.num_layers = num_layers
@@ -153,7 +153,7 @@ class Encoder(tf.keras.Model):
         self.return_intermediate = return_intermediate
 
     def build(self, input_shape):
-        self.enc_layers = [EncoderLayer(self.d_model, self.num_heads, self.d_ff, self.atv_fun,
+        self.enc_layers = [EncoderLayerWithWrite(self.d_model, self.num_heads, self.d_ff, self.atv_fun,
                                         self.dropout_rate, self.dim_k, self.parameter_sharing,
                                         self.full_attention,self.num_layers, self.name, name='layer_enc%d' % i)
                            for i in range(self.num_layers)]
@@ -196,7 +196,7 @@ class Encoder(tf.keras.Model):
         return x, attention_weights
 
     def get_config(self):
-        config = super(Encoder, self).get_config()
+        config = super(EncoderWithWrite, self).get_config()
         config.update({
             'd_model': self.d_model,
             'num_layers': self.num_layers,
