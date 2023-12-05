@@ -8,6 +8,7 @@ from layers_utils import *
 from lmha_layer import *
 # from admin_tf import Admin
 import numpy as np
+import tensorflow as tf
 
 
 class CrossAttnLayer(tf.keras.layers.Layer):
@@ -222,7 +223,7 @@ class CrossAttnLayer(tf.keras.layers.Layer):
         
         if self.first_pass:
             f = open('./variance_output', 'a')
-            f.write(f'{self.name},attn_x12_out:{np.var(attn_x12_out.numpy().flatten())},attn_x21_out:{np.var(attn_x21_out.numpy().flatten())},attn_x1_out:{np.var(attn_x1_out.numpy().flatten())},attn_x2_out:{np.var(attn_x2_out.numpy().flatten())}\n')
+            f.write(f'{self.name},attn_x12_out:{tf.math.reduce_variance(attn_x12_out)},attn_x21_out:{tf.math.reduce_variance(attn_x21_out)},attn_x1_out:{tf.math.reduce_variance(attn_x1_out)},attn_x2_out:{tf.math.reduce_variance(attn_x2_out)}\n')
             f.close()
             self.first_pass = False
 
