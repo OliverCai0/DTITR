@@ -97,7 +97,7 @@ class EncoderLayer(tf.keras.layers.Layer):
         sublayer2_out = self.layernorm2(sublayer1_out + poswiseff_out)  # [batch_size, input_seq_len, d_model]
         if self.first_pass:
             f = open('./variance_output', 'a')
-            f.write(f'{self.name},attn_out:{np.var(attn_out)}\n')
+            f.write(f'{self.name},attn_out:{np.var(attn_out.numpy().flatten())}\n')
             f.close()
             self.first_pass = False
 
