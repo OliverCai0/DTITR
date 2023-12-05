@@ -8,6 +8,7 @@ from layers_utils import *
 from mha_layer import *
 from admin_tf import Admin
 import tensorflow as tf
+import numpy as np
 
 
 class EncoderLayer(tf.keras.layers.Layer):
@@ -26,7 +27,7 @@ class EncoderLayer(tf.keras.layers.Layer):
 
     """
 
-    def __init__(self, d_model, num_heads, d_ff, atv_fun, dropout_rate, dim_k, parameter_sharing, full_attention, num_of_res_layers,
+    def __init__(self, d_model, num_heads, d_ff, atv_fun, dropout_rate, dim_k, parameter_sharing, full_attention, num_of_res_layers, parent_name,
                  **kwargs):
         super(EncoderLayer, self).__init__(**kwargs)
 
@@ -41,6 +42,7 @@ class EncoderLayer(tf.keras.layers.Layer):
         self.num_of_res_layers = num_of_res_layers
         self.admin = 1
         self.first_pass = True
+        self.parent_name = parent_name
 
     def build(self, input_shape):
 
@@ -96,9 +98,9 @@ class EncoderLayer(tf.keras.layers.Layer):
 
         sublayer2_out = self.layernorm2(sublayer1_out + poswiseff_out)  # [batch_size, input_seq_len, d_model]
         if self.first_pass:
-            # f = open('./variance_output', 'a')
-            tf.print(f'{self.name},attn_out:{tf.math.reduce_variance(attn_out)}')
-            # f.close()
+            f = open('./variance_output', 'a')
+            f.write(f'{self.parent_name}-{self.name},attn_out:{np.var(attn_out.numpy().flatten())}\n')
+            f.close()
             self.first_pass = False
 
         return sublayer2_out, attn_w
@@ -153,7 +155,7 @@ class Encoder(tf.keras.Model):
     def build(self, input_shape):
         self.enc_layers = [EncoderLayer(self.d_model, self.num_heads, self.d_ff, self.atv_fun,
                                         self.dropout_rate, self.dim_k, self.parameter_sharing,
-                                        self.full_attention,self.num_layers, name='layer_enc%d' % i)
+                                        self.full_attention,self.num_layers, self.name, name='layer_enc%d' % i)
                            for i in range(self.num_layers)]
 
     def call(self, inputs, mask=None):
