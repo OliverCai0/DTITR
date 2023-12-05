@@ -56,7 +56,7 @@ class EncoderLayer(tf.keras.layers.Layer):
 
         self.layernorm1 = tf.keras.layers.LayerNormalization(epsilon=1e-5, name='enc_norm1')
         self.layernorm2 = tf.keras.layers.LayerNormalization(epsilon=1e-5, name='enc_norm2')
-        self.admin = Admin(self.num_of_res_layers)
+        self.admin = 1
 
     def call(self, inputs, mask=None):
         """
@@ -85,7 +85,7 @@ class EncoderLayer(tf.keras.layers.Layer):
 
         attn_out, attn_w = self.mha_layer([x, x, x], mask=mask)
 
-        admined = self.admin(x, attn_out)
+        admined = x * self.admin + attn_out
         sublayer1_out = self.layernorm1(admined)  # [batch_size, input_seq_len, d_model]
 
         # Sublayer 2 (Position-Wise Feed Forward)
