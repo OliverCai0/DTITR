@@ -19,6 +19,98 @@ from huggingface_hub import HfApi
 from datetime import datetime
 import tensorflow as tf
 
+def build_dtitr_model_no_compile(FLAGS, prot_trans_depth, smiles_trans_depth, cross_attn_depth,
+                      prot_trans_heads, smiles_trans_heads, cross_attn_heads,
+                      prot_parameter_sharing, prot_dim_k,
+                      prot_d_ff, smiles_d_ff, d_model, dropout_rate, dense_atv_fun,
+                      out_mlp_depth, out_mlp_units, optimizer_fn):
+    """
+    Function to build the DTITR Model
+
+    Args:
+    - FLAGS: arguments object
+    - prot_trans_depth [int]: number of protein transformer-encoders
+    - smiles_trans_depth [int]: number of SMILES transformer-encoders
+    - cross_attn_depth [int]: number of cross-attention transformer-encoders
+    - prot_trans_heads [int]: number of heads for the protein self-attention mha
+    - smiles_trans_heads [int]: number of heads for the smiles self-attention mha
+    - cross_attn_heads [int]: number of heads for the cross-attention mha
+    - prot_parameter_sharing [str]: protein parameter sharing option in the case of Linear MHA
+    - prot_dim_k [int]: protein Linear MHA projection dimension
+    - prot_d_ff [int]: hidden numbers for the first dense layer of the FFN in the case of the proteins
+    - smiles_d_ff [int]: hidden numbers for the first dense layer of the FFN in the case of the smiles
+    - d_model [int]: embedding dim
+    - dropout_rate [float]: % of dropout
+    - dense_atv_fun: dense layers activation function
+    - out_mlp_depth [int]: FCNN number of layers
+    - out_mlp_units [list of ints]: hidden neurons for each one of the dense layers of the FCNN
+    - optimizer_fn: optimizer function
+
+    Outputs:
+    - dtitr_model
+
+    """
+
+    tf.config.run_functions_eagerly(True)
+
+    if FLAGS.bpe_option[0]:
+        prot_input = tf.keras.Input(shape=(FLAGS.protein_bpe_len + 1,), dtype=tf.int32, name='protein_input')
+        prot_mask = attn_pad_mask()(prot_input)
+        encode_prot = EmbeddingLayer(FLAGS.protein_dict_bpe_len + 2, d_model,  # FLAGS.protein_bpe_len+1,
+                                     dropout_rate, FLAGS.pos_enc_option)(prot_input)
+
+    else:
+        prot_input = tf.keras.Input(shape=(FLAGS.protein_len + 1,), dtype=tf.int32, name='protein_input')
+        prot_mask = attn_pad_mask()(prot_input)
+        encode_prot = EmbeddingLayer(FLAGS.protein_dict_len + 2, d_model,  # FLAGS.protein_len+1,
+                                     dropout_rate, FLAGS.pos_enc_option)(prot_input)
+
+    encode_prot, _ = Encoder(d_model, prot_trans_depth, prot_trans_heads, prot_d_ff, dense_atv_fun,
+                             dropout_rate, prot_dim_k, prot_parameter_sharing,
+                             FLAGS.prot_full_attn,
+                             FLAGS.return_intermediate, name='encoder_prot')(encode_prot, prot_mask)
+
+    if FLAGS.bpe_option[1]:
+        smiles_input = tf.keras.Input(shape=(FLAGS.smiles_bpe_len + 1,), dtype=tf.int32, name='smiles_input')
+        smiles_mask = attn_pad_mask()(smiles_input)
+        encode_smiles = EmbeddingLayer(FLAGS.smiles_dict_bpe_len + 2, d_model,  # FLAGS.smiles_bpe_len+1,
+                                       dropout_rate, FLAGS.pos_enc_option)(smiles_input)
+    else:
+        smiles_input = tf.keras.Input(shape=(FLAGS.smiles_len + 1,), dtype=tf.int32, name='smiles_input')
+        smiles_mask = attn_pad_mask()(smiles_input)
+        encode_smiles = EmbeddingLayer(FLAGS.smiles_dict_len + 2, d_model,  # FLAGS.smiles_len+1,
+                                       dropout_rate, FLAGS.pos_enc_option)(smiles_input)
+
+    encode_smiles, _ = Encoder(d_model, smiles_trans_depth, smiles_trans_heads, smiles_d_ff, dense_atv_fun,
+                               dropout_rate, FLAGS.smiles_dim_k, FLAGS.smiles_parameter_sharing,
+                               FLAGS.smiles_full_attn, FLAGS.return_intermediate,
+                               name='encoder_smiles')(encode_smiles, smiles_mask)
+
+    cross_prot_smiles, _ = CrossAttnBlock(d_model, cross_attn_depth, cross_attn_heads, prot_trans_heads,
+                                          smiles_trans_heads, prot_d_ff, smiles_d_ff, dense_atv_fun,
+                                          dropout_rate, prot_dim_k, prot_parameter_sharing,
+                                          FLAGS.prot_full_attn, FLAGS.smiles_dim_k,
+                                          FLAGS.smiles_parameter_sharing, FLAGS.smiles_full_attn,
+                                          FLAGS.return_intermediate,
+                                          name='cross_attn_block')([encode_prot,
+                                                                    encode_smiles],
+                                                                   smiles_mask,
+                                                                   prot_mask)
+
+    out = OutputMLP(out_mlp_depth, out_mlp_units, dense_atv_fun,
+                    FLAGS.output_atv_fun, dropout_rate, name='output_block')(cross_prot_smiles)
+
+
+    dtitr_model = tf.keras.Model(inputs=[prot_input, smiles_input], outputs=out, name='dtitr')
+
+    # dtitr_model.compile(optimizer=optimizer_fn, loss=FLAGS.loss_function,
+    #                     metrics=[tf.keras.metrics.RootMeanSquaredError(), c_index],
+    #                     run_eagerly=True)
+
+    # tf.keras.utils.plot_model(dtitr_model, to_file='./dtitr.png', dpi=600)
+
+    return dtitr_model
+
 def build_dtitr_model(FLAGS, prot_trans_depth, smiles_trans_depth, cross_attn_depth,
                       prot_trans_heads, smiles_trans_heads, cross_attn_heads,
                       prot_parameter_sharing, prot_dim_k,
