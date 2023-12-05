@@ -143,8 +143,6 @@ def build_dtitr_model(FLAGS, prot_trans_depth, smiles_trans_depth, cross_attn_de
 
     """
 
-    tf.config.run_functions_eagerly(True)
-
     if FLAGS.bpe_option[0]:
         prot_input = tf.keras.Input(shape=(FLAGS.protein_bpe_len + 1,), dtype=tf.int32, name='protein_input')
         prot_mask = attn_pad_mask()(prot_input)
@@ -196,8 +194,7 @@ def build_dtitr_model(FLAGS, prot_trans_depth, smiles_trans_depth, cross_attn_de
     dtitr_model = tf.keras.Model(inputs=[prot_input, smiles_input], outputs=out, name='dtitr')
 
     dtitr_model.compile(optimizer=optimizer_fn, loss=FLAGS.loss_function,
-                        metrics=[tf.keras.metrics.RootMeanSquaredError(), c_index],
-                        run_eagerly=True)
+                        metrics=[tf.keras.metrics.RootMeanSquaredError(), c_index])
 
     # tf.keras.utils.plot_model(dtitr_model, to_file='./dtitr.png', dpi=600)
 

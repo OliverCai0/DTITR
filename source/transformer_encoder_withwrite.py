@@ -97,11 +97,11 @@ class EncoderLayer(tf.keras.layers.Layer):
         poswiseff_out = self.poswiseff_layer(sublayer1_out)
 
         sublayer2_out = self.layernorm2(sublayer1_out + poswiseff_out)  # [batch_size, input_seq_len, d_model]
-        # if self.first_pass:
-        #     f = open('./variance_output', 'a')
-        #     f.write(f'{self.parent_name}-{self.name},attn_out:{np.var(attn_out.numpy().flatten())}\n')
-        #     f.close()
-        #     self.first_pass = False
+        if self.first_pass:
+            f = open('./variance_output', 'a')
+            f.write(f'{self.parent_name}-{self.name},attn_out:{np.var(attn_out.numpy().flatten())}\n')
+            f.close()
+            self.first_pass = False
 
         return sublayer2_out, attn_w
 
