@@ -101,7 +101,8 @@ def build_dtitr_model(FLAGS, prot_trans_depth, smiles_trans_depth, cross_attn_de
     dtitr_model = tf.keras.Model(inputs=[prot_input, smiles_input], outputs=out, name='dtitr')
 
     dtitr_model.compile(optimizer=optimizer_fn, loss=FLAGS.loss_function,
-                        metrics=[tf.keras.metrics.RootMeanSquaredError(), c_index])
+                        metrics=[tf.keras.metrics.RootMeanSquaredError(), c_index],
+                        run_eagerly=True)
 
     # tf.keras.utils.plot_model(dtitr_model, to_file='./dtitr.png', dpi=600)
 

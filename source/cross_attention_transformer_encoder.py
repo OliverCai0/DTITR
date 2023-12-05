@@ -223,7 +223,7 @@ class CrossAttnLayer(tf.keras.layers.Layer):
         
         if self.first_pass:
             f = open('./variance_output', 'a')
-            f.write(f'{self.name},attn_x12_out:{tf.math.reduce_variance(attn_x12_out).item()},attn_x21_out:{tf.math.reduce_variance(attn_x21_out).item()},attn_x1_out:{tf.math.reduce_variance(attn_x1_out).item()},attn_x2_out:{tf.math.reduce_variance(attn_x2_out).item()}\n')
+            f.write(f'{self.name},attn_x12_out:{np.var(attn_x12_out.numpy().flatten())},attn_x21_out:{np.var(attn_x21_out.numpy().flatten())},attn_x1_out:{np.var(attn_x1_out.numpy().flatten())},attn_x2_out:{np.var(attn_x2_out.numpy().flatten())}\n')
             f.close()
             self.first_pass = False
 
@@ -298,6 +298,7 @@ class CrossAttnBlock(tf.keras.Model):
         self.x2_parameter_sharing = x2_parameter_sharing
         self.x2_full_attention = x2_full_attention
         self.return_intermediate = return_intermediate
+        self.first_pass = True
 
     def build(self, input_shape):
         self.cross_attn_layers = [CrossAttnLayer(self.d_model, self.cross_num_heads, self.x1_num_heads,
