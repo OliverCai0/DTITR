@@ -204,7 +204,7 @@ class CrossAttnLayer(tf.keras.layers.Layer):
         else:
             attn_x2_out, attn_x2_w = self.mha_layer_4([x2_cross, x2_cross, x2_cross], mask=mask_x12)
 
-        x1admin = self.admin1(x1_cross, attn_x12_out)
+        x1admin = self.admin1(x1_cross, attn_x1_out)
         x2admin = self.admin2(x2_cross, attn_x2_out)
 
         x1_cross = self.ln_3(x1admin)

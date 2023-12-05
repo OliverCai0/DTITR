@@ -336,14 +336,21 @@ def run_train_model(FLAGS):
     mse, rmse, ci = dtitr_model.evaluate([prot_test, smiles_test], kd_test)
 
     if FLAGS.hugging_save:
-        dtitr_model.save('dtitr_model.h5')
-        api = HfApi()
-        api.upload_file(
-            path_or_fileobj= os.path.join(os.getcwd(), 'dtitr_model.h5'),  
-            path_in_repo=f'DTITR-{FLAGS.hugging_save}',
-            repo_id="DLSAutumn2023/DTITR_Recreation"
-        )
+        model_path = 'dtitr_model.tf'
+        # No need to check if the path exists or to remove it since 'save' will overwrite by default.
 
+        # Save the model in the TensorFlow SavedModel format (directory).
+        dtitr_model.save(model_path, overwrite=True)
+        
+        # Authenticate with Hugging Face Hub using your token.
+        api = HfApi()
+        
+        # Upload the model directory to the repository.
+        api.upload_folder(
+            folder_path=model_path,
+            path_in_repo=f'DTITR-{FLAGS.hugging_save}',
+            repo_id="DLSAutumn2023/DTITR_Recreation",
+        )
 
     logging("Test Fold - " + (" MSE = %0.3f, RMSE = %0.3f, CI = %0.3f" % (mse, rmse, ci)), FLAGS)
 
