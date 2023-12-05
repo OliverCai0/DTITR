@@ -7,6 +7,7 @@ from lmha_layer import *
 from layers_utils import *
 from mha_layer import *
 from admin_tf import Admin
+import numpy as np
 
 
 class EncoderLayer(tf.keras.layers.Layer):
@@ -38,6 +39,8 @@ class EncoderLayer(tf.keras.layers.Layer):
         self.parameter_sharing = parameter_sharing
         self.full_attention = full_attention
         self.num_of_res_layers = num_of_res_layers
+        self.admin = 1
+        self.first_pass = True
 
     def build(self, input_shape):
 
@@ -56,7 +59,6 @@ class EncoderLayer(tf.keras.layers.Layer):
 
         self.layernorm1 = tf.keras.layers.LayerNormalization(epsilon=1e-5, name='enc_norm1')
         self.layernorm2 = tf.keras.layers.LayerNormalization(epsilon=1e-5, name='enc_norm2')
-        self.admin = 1
 
     def call(self, inputs, mask=None):
         """
@@ -93,6 +95,11 @@ class EncoderLayer(tf.keras.layers.Layer):
         poswiseff_out = self.poswiseff_layer(sublayer1_out)
 
         sublayer2_out = self.layernorm2(sublayer1_out + poswiseff_out)  # [batch_size, input_seq_len, d_model]
+        if self.first_pass:
+            f = open('./variance_output', 'a')
+            f.write(f'{self.name},attn_out:{np.var(attn_out)}\n')
+            f.close()
+            self.first_pass = False
 
         return sublayer2_out, attn_w
 
