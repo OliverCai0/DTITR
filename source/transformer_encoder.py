@@ -7,9 +7,7 @@ from lmha_layer import *
 from layers_utils import *
 from mha_layer import *
 from admin_tf import Admin
-import numpy as np
 import tensorflow as tf
-import sys
 
 
 class EncoderLayer(tf.keras.layers.Layer):
@@ -99,7 +97,7 @@ class EncoderLayer(tf.keras.layers.Layer):
         sublayer2_out = self.layernorm2(sublayer1_out + poswiseff_out)  # [batch_size, input_seq_len, d_model]
         if self.first_pass:
             # f = open('./variance_output', 'a')
-            tf.print(f'{self.name},attn_out:{tf.math.reduce_variance(attn_out)}', output_stream=sys.stdout)
+            tf.print(f'{self.name},attn_out:{tf.math.reduce_variance(attn_out)}')
             # f.close()
             self.first_pass = False
 
