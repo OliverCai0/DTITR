@@ -21,3 +21,4 @@ class Admin(tf.keras.layers.Layer):
         config.update({
             'omega_value' : self.omega_value 
         })
+        return config
