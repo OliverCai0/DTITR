@@ -352,7 +352,11 @@ def run_train_model(FLAGS):
             repo_id="DLSAutumn2023/DTITR_Recreation",
         )
 
-    logging("Test Fold - " + (" MSE = %0.3f, RMSE = %0.3f, CI = %0.3f" % (mse, rmse, ci)), FLAGS)
+    metrics = inference_metrics(dtitr_model, [prot_test, smiles_test, kd_test])
+
+    logging(metrics, FLAGS)
+
+    # logging("Test Fold - " + (" MSE = %0.3f, RMSE = %0.3f, CI = %0.3f" % (mse, rmse, ci)), FLAGS)
 
 def run_evaluation_model(FLAGS):
     """
