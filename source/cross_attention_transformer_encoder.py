@@ -6,7 +6,7 @@
 from mha_layer import *
 from layers_utils import *
 from lmha_layer import *
-from admin_tf import Admin
+# from admin_tf import Admin
 
 
 class CrossAttnLayer(tf.keras.layers.Layer):
@@ -101,8 +101,8 @@ class CrossAttnLayer(tf.keras.layers.Layer):
 
         self.poswiseff_layer_2 = PosWiseFF(self.d_model, self.x2_d_ff, self.atv_fun, self.dropout_rate,
                                            name='pos_wise_ff_x2_cross')
-        self.admin1 = Admin(self.num_of_res_layers)
-        self.admin2 = Admin(self.num_of_res_layers)
+        # self.admin1 = Admin(self.num_of_res_layers)
+        # self.admin2 = Admin(self.num_of_res_layers)
 
     def rearrange_qkv(self, input1, input2):
         """
@@ -204,11 +204,11 @@ class CrossAttnLayer(tf.keras.layers.Layer):
         else:
             attn_x2_out, attn_x2_w = self.mha_layer_4([x2_cross, x2_cross, x2_cross], mask=mask_x12)
 
-        x1admin = self.admin1(x1_cross, attn_x12_out)
-        x2admin = self.admin2(x2_cross, attn_x2_out)
+        # x1admin = self.admin1(x1_cross, attn_x12_out)
+        # x2admin = self.admin2(x2_cross, attn_x2_out)
 
-        x1_cross = self.ln_3(x1admin)
-        x2_cross = self.ln_4(x2admin)
+        x1_cross = self.ln_3(x1_cross + attn_x1_out)
+        x2_cross = self.ln_4(x2_cross + attn_x2_out)
 
         x1_cross_posff_out = self.poswiseff_layer_1(x1_cross)
         x2_cross_posff_out = self.poswiseff_layer_2(x2_cross)
