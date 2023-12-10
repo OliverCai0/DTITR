@@ -52,10 +52,12 @@ def inference_metrics(model, data, batch_size=16):
     - model: trained model
     - data: [protein data, smiles data, kd values]
     - batch_size: size of each batch for inference
-
     """
+
+    # Set TF_GPU_ALLOCATOR to 'cuda_malloc_async'
     os.environ['TF_GPU_ALLOCATOR'] = 'cuda_malloc_async'
 
+    # Enable Memory Growth
     gpus = tf.config.experimental.list_physical_devices('GPU')
     if gpus:
         try:
@@ -63,24 +65,32 @@ def inference_metrics(model, data, batch_size=16):
                 tf.config.experimental.set_memory_growth(gpu, True)
         except RuntimeError as e:
             print(e)
-        num_samples = data[0].shape[0]
-        pred_values = []
-        start = time.time()
 
+    # Initialize prediction and timing
+    num_samples = data[0].shape[0]
+    pred_values = []
+    start = time.time()
+
+    # Process data in batches
     for i in range(0, num_samples, batch_size):
         batch_protein = data[0][i:i + batch_size]
         batch_smiles = data[1][i:i + batch_size]
         batch_pred = model([batch_protein, batch_smiles], training=False)
         pred_values.extend(batch_pred)
 
+    # Convert predictions to numpy array and calculate inference time
     pred_values = np.array(pred_values)
     end = time.time()
     inf_time = end - start
 
-    print("here lmao")
-
-    metrics = {'MSE': mse(data[2], pred_values), 'RMSE': mse(data[2], pred_values, squared=False),
-               'CI': c_index(data[2], pred_values).numpy(), 'R2': r2s(data[2], pred_values),
-               'Spearman': stats.spearmanr(data[2].numpy(), pred_values)[0], 'Time': inf_time}
+    # Calculate metrics
+    metrics = {
+        'MSE': mse(data[2], pred_values),
+        'RMSE': mse(data[2], pred_values, squared=False),
+        'CI': c_index(data[2], pred_values).numpy(),
+        'R2': r2s(data[2], pred_values),
+        'Spearman': stats.spearmanr(data[2].numpy(), pred_values)[0],
+        'Time': inf_time
+    }
 
     return metrics

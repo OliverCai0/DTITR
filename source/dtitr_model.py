@@ -425,9 +425,9 @@ def run_evaluation_model(FLAGS):
     metrics = inference_metrics(dtitr_model, [prot_test, smiles_test, kd_test])
 
     logging(metrics, FLAGS)
-    pred_scatter_plot(kd_test, dtitr_model.predict([prot_test, smiles_test])[:, 0],
-                      'Davis Dataset: Predictions vs True Values', 'True Values', 'Predictions',
-                      False, '')
+    # pred_scatter_plot(kd_test, dtitr_model.predict([prot_test, smiles_test])[:, 0],
+    #                   'Davis Dataset: Predictions vs True Values', 'True Values', 'Predictions',
+    #                   False, '')
 
 
 if __name__ == "__main__":
