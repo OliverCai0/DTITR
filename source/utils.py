@@ -54,8 +54,10 @@ def inference_metrics(model, data):
 
     """
 
+
     start = time.time()
-    pred_values = model.predict([data[0], data[1]])
+    pred_values = model([data[0], data[1]], training=False)
+    # pred_values = model.predict([data[0], data[1]])
     end = time.time()
     inf_time = end - start
 
