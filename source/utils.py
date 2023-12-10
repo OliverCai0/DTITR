@@ -45,23 +45,32 @@ def min_max_scale(data):
 
 
 def inference_metrics(model, data, batch_size=32):
+    """
+    Prediction Efficiency Evaluation Metrics with Batching
+
+    Args:
+    - model: trained model
+    - data: [protein data, smiles data, kd values]
+    - batch_size: size of each batch for inference
+
+    """
+
+    num_samples = data[0].shape[0]
     pred_values = []
-    for i in range(0, len(data[0]), batch_size):
+    start = time.time()
+
+    for i in range(0, num_samples, batch_size):
         batch_protein = data[0][i:i + batch_size]
         batch_smiles = data[1][i:i + batch_size]
-        batch_preds = model([batch_protein, batch_smiles], training=False)
-        pred_values.extend(batch_preds)
+        batch_pred = model([batch_protein, batch_smiles], training=False)
+        pred_values.extend(batch_pred)
 
     pred_values = np.array(pred_values)
-
-
-    start = time.time()
-    # pred_values = model.predict([data[0], data[1]])
     end = time.time()
     inf_time = end - start
 
     metrics = {'MSE': mse(data[2], pred_values), 'RMSE': mse(data[2], pred_values, squared=False),
                'CI': c_index(data[2], pred_values).numpy(), 'R2': r2s(data[2], pred_values),
-               'Spearman': stats.spearmanr(data[2], pred_values)[0], 'Time': inf_time}
+               'Spearman': stats.spearmanr(data[2].numpy(), pred_values)[0], 'Time': inf_time}
 
     return metrics
