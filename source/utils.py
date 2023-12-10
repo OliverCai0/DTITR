@@ -44,19 +44,18 @@ def min_max_scale(data):
     return data_scaled
 
 
-def inference_metrics(model, data):
-    """
-    Prediction Efficiency Evaluation Metrics
+def inference_metrics(model, data, batch_size=32):
+    pred_values = []
+    for i in range(0, len(data[0]), batch_size):
+        batch_protein = data[0][i:i + batch_size]
+        batch_smiles = data[1][i:i + batch_size]
+        batch_preds = model([batch_protein, batch_smiles], training=False)
+        pred_values.extend(batch_preds)
 
-    Args:
-    - model: trained model
-    - data: [protein data, smiles data, kd values]
-
-    """
+    pred_values = np.array(pred_values)
 
 
     start = time.time()
-    pred_values = model([data[0], data[1]], training=False)
     # pred_values = model.predict([data[0], data[1]])
     end = time.time()
     inf_time = end - start
