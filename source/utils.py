@@ -44,7 +44,7 @@ def min_max_scale(data):
     return data_scaled
 
 
-def inference_metrics(model, data, batch_size=32):
+def inference_metrics(model, data, batch_size=16):
     """
     Prediction Efficiency Evaluation Metrics with Batching
 
@@ -68,6 +68,8 @@ def inference_metrics(model, data, batch_size=32):
     pred_values = np.array(pred_values)
     end = time.time()
     inf_time = end - start
+
+    print("here lmao")
 
     metrics = {'MSE': mse(data[2], pred_values), 'RMSE': mse(data[2], pred_values, squared=False),
                'CI': c_index(data[2], pred_values).numpy(), 'R2': r2s(data[2], pred_values),
