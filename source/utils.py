@@ -43,7 +43,7 @@ def min_max_scale(data):
 
     return data_scaled
 
-
+import os
 def inference_metrics(model, data, batch_size=16):
     """
     Prediction Efficiency Evaluation Metrics with Batching
@@ -54,10 +54,18 @@ def inference_metrics(model, data, batch_size=16):
     - batch_size: size of each batch for inference
 
     """
+    os.environ['TF_GPU_ALLOCATOR'] = 'cuda_malloc_async'
 
-    num_samples = data[0].shape[0]
-    pred_values = []
-    start = time.time()
+    gpus = tf.config.experimental.list_physical_devices('GPU')
+    if gpus:
+        try:
+            for gpu in gpus:
+                tf.config.experimental.set_memory_growth(gpu, True)
+        except RuntimeError as e:
+            print(e)
+        num_samples = data[0].shape[0]
+        pred_values = []
+        start = time.time()
 
     for i in range(0, num_samples, batch_size):
         batch_protein = data[0][i:i + batch_size]
