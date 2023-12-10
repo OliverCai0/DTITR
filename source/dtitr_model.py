@@ -416,8 +416,8 @@ def run_evaluation_model(FLAGS):
 
 
     model_path = os.path.join(os.getcwd(), FLAGS.mpath) if FLAGS.mpath else '../model/dtitr_model/'
-    if not os.path.exists(model_path) or not "saved_model.pb" in os.listdir(model_path):
-        raise FileNotFoundError(f"Model not found in the specified directory: {model_path}")
+    # if not os.path.exists(model_path) or not "saved_model.pb" in os.listdir(model_path):
+    # raise FileNotFoundError(f"Model not found in the specified directory: {model_path}")
 
     dtitr_model = tf.saved_model.load(model_path)
 
