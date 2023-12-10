@@ -414,8 +414,13 @@ def run_evaluation_model(FLAGS):
     # dtitr_model = build_dtitr_model(FLAGS, 3, 3, 1, 4, 4, 4, '', '', 512, 512, 128, 0.1, 'gelu', 3, [512, 512, 512],
     #                                 optimizer_fun)
 
-    # Load the TensorFlow SavedModel
-    dtitr_model = tf.saved_model.load(os.path.join(os.getcwd(), FLAGS.mpath) if FLAGS.mpath else '../model/dtitr_model/')
+
+    model_path = os.path.join(os.getcwd(), FLAGS.mpath) if FLAGS.mpath else '../model/dtitr_model/'
+    if not os.path.exists(model_path) or not "saved_model.pb" in os.listdir(model_path):
+        raise FileNotFoundError(f"Model not found in the specified directory: {model_path}")
+
+    dtitr_model = tf.saved_model.load(model_path)
+
 
     metrics = inference_metrics(dtitr_model, [prot_test, smiles_test, kd_test])
 
