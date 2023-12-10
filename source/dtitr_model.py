@@ -414,8 +414,8 @@ def run_evaluation_model(FLAGS):
     # dtitr_model = build_dtitr_model(FLAGS, 3, 3, 1, 4, 4, 4, '', '', 512, 512, 128, 0.1, 'gelu', 3, [512, 512, 512],
     #                                 optimizer_fun)
 
-    # small modification to load a specific model from a path
-    dtitr_model.load_weights('../model/dtitr_model/') if not FLAGS.mpath else dtitr_model.load_weights(os.path.join(os.getcwd(), FLAGS.mpath))
+    # Load the TensorFlow SavedModel
+    dtitr_model = tf.saved_model.load(os.path.join(os.getcwd(), FLAGS.mpath) if FLAGS.mpath else '../model/dtitr_model/')
 
     metrics = inference_metrics(dtitr_model, [prot_test, smiles_test, kd_test])
 
